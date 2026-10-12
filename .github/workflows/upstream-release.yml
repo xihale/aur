@@ -54,9 +54,10 @@ jobs:
         if: env.AUR_KEY != ''
         run: |
           mkdir -p /root/.ssh
-          printf '%s\n' "$AUR_KEY" > /root/.ssh/aur_key
+          printf '%s' "$AUR_KEY" | base64 -d > /root/.ssh/aur_key
           chmod 600 /root/.ssh/aur_key
           ssh-keyscan -H aur.archlinux.org > /root/.ssh/known_hosts 2>/dev/null
+          ssh -i /root/.ssh/aur_key -o UserKnownHostsFile=/root/.ssh/known_hosts -o StrictHostKeyChecking=yes -T aur@aur.archlinux.org 2>&1 | grep -q 'restricted' || true
 
       - name: Resolve package list
         id: resolve
