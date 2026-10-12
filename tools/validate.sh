@@ -21,6 +21,8 @@ for m in "$PACKAGES"/*/meta.json; do
 	[ -f "$pk" ] || { echo "missing: $d/PKGBUILD"; fail=1; continue; }
 	bash -n "$pk" || { echo "syntax: $d/PKGBUILD"; fail=1; }
 	[ -f "$PACKAGES/$d/.SRCINFO" ] || { echo "missing: $d/.SRCINFO"; fail=1; }
+	git -C "$ROOT" ls-files --error-unmatch "packages/$d/meta.json" >/dev/null 2>&1 ||
+		{ echo "untracked: $d/meta.json (nested .gitignore?)"; fail=1; }
 done
 
 "$TOOLS/gen-index.sh" >/dev/null
