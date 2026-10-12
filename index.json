@@ -5,47 +5,6 @@
       "tag_to_pkgver": []
     }
   ],
-  "GDUTMeow/GDUTCourseGrabber": [
-    {
-      "pkg": "gdut_course_grabber",
-      "tag_to_pkgver": [
-        "s/^v//"
-      ]
-    }
-  ],
-  "MaurUppi/cloudpan189-go": [
-    {
-      "pkg": "cloudpan189-go-bin",
-      "tag_to_pkgver": [
-        "s/^v//"
-      ]
-    }
-  ],
-  "kittors/CliRelay": [
-    {
-      "pkg": "clirelay-bin",
-      "tag_to_pkgver": [
-        "s/^v//"
-      ]
-    }
-  ],
-  "nowledge-co/con-terminal": [
-    {
-      "pkg": "con-terminal-bin",
-      "tag_to_pkgver": [
-        "s/^v//",
-        "s/-/./g"
-      ]
-    }
-  ],
-  "qxcnm/Codex-Manager": [
-    {
-      "pkg": "CodexManager",
-      "tag_to_pkgver": [
-        "s/^v//"
-      ]
-    }
-  ],
   "router-for-me/CLIProxyAPI": [
     {
       "pkg": "cli-proxy-api-bin",

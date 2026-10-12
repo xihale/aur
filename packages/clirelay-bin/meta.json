@@ -1,1 +1,4 @@
-{"aur": false, "watch": {"github": "kittors/CliRelay", "tag_to_pkgver": ["s/^v//"]}, "build_test": true}
+{
+  "aur": false,
+  "build_test": true
+}
