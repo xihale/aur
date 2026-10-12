@@ -5,6 +5,8 @@ compatibility_date = "2026-09-01"
 [vars]
 # The monorepo this worker dispatches to.
 GITHUB_REPO = "xihale/aur"
+# Non-release GitHub mail lands here (verified destination address).
+FORWARD_TO = "xihale.top@qq.com"
 
 # Secrets (never in this file):
 #   wrangler secret put GITHUB_TOKEN

@@ -10,23 +10,25 @@ const GITHUB_HEADERS = {
 	'List-Id': 'usestrix/strix <usestrix.strix.github.com>',
 };
 
-const env = { GITHUB_REPO: 'xihale/aur', GITHUB_TOKEN: 't' };
+const env = { GITHUB_REPO: 'xihale/aur', GITHUB_TOKEN: 't', FORWARD_TO: 'inbox@qq.com' };
 const INDEX = { 'usestrix/strix': [{ pkg: 'strix-bin', tag_to_pkgver: ['s/^v//'] }] };
 
 async function run(name, mime) {
 	const calls = [];
 	const rejects = [];
+	const forwards = [];
 	globalThis.fetch = async (url, opts) => {
 		calls.push({ url: String(url), method: opts?.method, body: opts?.body });
 		if (String(url).includes('/contents/index.json'))
 			return new Response(JSON.stringify(INDEX), { status: 200 });
 		return new Response(null, { status: 204 });
 	};
-	const message = { raw: new Response(mime).body, setReject: (r) => rejects.push(r) };
+	const message = { raw: new Response(mime).body, setReject: (r) => rejects.push(r), forward: async () => forwards.push(1) };
 	await worker.email(message, env, { waitUntil: (p) => p });
 	console.log(`--- ${name}`);
 	console.log('rejects:', rejects);
 	console.log('dispatches:', calls.filter((c) => c.method === 'POST').map((c) => JSON.parse(c.body)));
+	console.log('forwards:', forwards.length);
 }
 
 // 1. real release mail, watched repo -> dispatch
