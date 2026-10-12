@@ -35,6 +35,8 @@ cp PKGBUILD "$work/"
 sed -i "s/^pkgver=.*/pkgver=$newver/" "$work/PKGBUILD"
 sed -i 's/^pkgrel=.*/pkgrel=1/' "$work/PKGBUILD"
 "$TOOLS/mksums.sh" "$work"
+# runner root umask can leave staged files 600; makepkg runs as builder
+chmod 644 "$work/PKGBUILD"
 ( cd "$work" && run_as_builder makepkg --printsrcinfo > .SRCINFO )
 mv "$work/PKGBUILD" PKGBUILD
 mv "$work/.SRCINFO" .SRCINFO
