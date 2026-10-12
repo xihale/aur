@@ -29,6 +29,7 @@ fi
 # (bad tag, broken URL) leaves the package untouched.
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
+if [ "$(id -u)" = 0 ]; then chown builder:builder "$work"; fi
 cp PKGBUILD "$work/"
 
 sed -i "s/^pkgver=.*/pkgver=$newver/" "$work/PKGBUILD"
