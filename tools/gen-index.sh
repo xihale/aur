@@ -17,6 +17,10 @@ for d in "$PACKAGES"/*/; do
 	' "$PACKAGES/$d/meta.json" >> "$nd"
 done
 
+# glob order is locale-dependent (strcoll); pin byte order so local and CI
+# produce byte-identical index.json
+LC_ALL=C sort -o "$nd" "$nd"
+
 jq -s '
 	group_by(.repo)
 	| map({(.[0].repo): [.[] | {pkg, tag_to_pkgver}]})

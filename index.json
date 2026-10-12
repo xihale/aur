@@ -70,13 +70,13 @@
   ],
   "xihale/snirect": [
     {
-      "pkg": "snirect-bin",
+      "pkg": "snirect",
       "tag_to_pkgver": [
         "s/^v//"
       ]
     },
     {
-      "pkg": "snirect",
+      "pkg": "snirect-bin",
       "tag_to_pkgver": [
         "s/^v//"
       ]

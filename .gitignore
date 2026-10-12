@@ -11,13 +11,6 @@ src/
 
 # local scratch, not part of the monorepo
 /.attic/
-/.electron-gyp/
-/zcode-bin-analysis/
-/actions_test/
-/t/
-/PKGBUILD/
-/sqlmap/
-/release-notes-*.md
 
 # per-package scratch
 node_modules/
