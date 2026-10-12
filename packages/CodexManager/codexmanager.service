@@ -1,0 +1,14 @@
+[Unit]
+Description=CodexManager Service — local gateway for Codex CLI
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/codexmanager/codexmanager-start
+Restart=on-failure
+RestartSec=5
+Environment=CODEXMANAGER_SERVICE_ADDR=0.0.0.0:15417
+Environment=CODEXMANAGER_DB_PATH=%h/.local/share/codexmanager/codexmanager.db
+
+[Install]
+WantedBy=default.target

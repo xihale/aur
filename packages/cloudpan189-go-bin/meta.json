@@ -1,0 +1,1 @@
+{"aur": true, "aur_name": "cloudpan189-go-mauruppi-bin", "watch": {"github": "MaurUppi/cloudpan189-go", "tag_to_pkgver": ["s/^v//"]}, "build_test": true}

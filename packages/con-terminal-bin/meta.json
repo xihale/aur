@@ -1,0 +1,1 @@
+{"aur": false, "watch": {"github": "nowledge-co/con-terminal", "tag_to_pkgver": ["s/^v//", "s/-/./g"]}, "build_test": true}

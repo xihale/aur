@@ -1,0 +1,122 @@
+name: upstream-release
+
+# Triggered by:
+#   - repository_dispatch "upstream-release" from the Cloudflare email worker
+#     (client_payload: {repo: "owner/name", tag: "vX.Y.Z"})
+#   - workflow_dispatch for manual runs:
+#       package: a package dir name, or "all" watched packages
+#       tag:     upstream tag; empty = resync current state without bumping
+on:
+  repository_dispatch:
+    types: [upstream-release]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package dir name, or "all"'
+        required: true
+        default: 'all'
+      tag:
+        description: 'Upstream tag (empty = resync only)'
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: upstream-release
+  cancel-in-progress: false
+
+env:
+  AUR_KEY: ${{ secrets.AUR_SSH_KEY }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    env:
+      GIT_SSH_COMMAND: ssh -i /root/.ssh/aur_key -o UserKnownHostsFile=/root/.ssh/known_hosts -o StrictHostKeyChecking=yes
+    steps:
+      - name: Install deps, create builder user
+        run: |
+          pacman -Syu --noconfirm git jq curl openssh sudo
+          useradd -m builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+
+      - uses: actions/checkout@v4
+
+      - name: Workspace permissions
+        run: |
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: AUR ssh key
+        if: env.AUR_KEY != ''
+        run: |
+          mkdir -p /root/.ssh
+          printf '%s\n' "$AUR_KEY" > /root/.ssh/aur_key
+          chmod 600 /root/.ssh/aur_key
+          ssh-keyscan -H aur.archlinux.org > /root/.ssh/known_hosts 2>/dev/null
+
+      - name: Resolve package list
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = repository_dispatch ]; then
+            repo='${{ github.event.client_payload.repo }}'
+            tag='${{ github.event.client_payload.tag }}'
+            pkgs=$(jq -r --arg r "$repo" '.[$r][].pkg' index.json)
+            [ -n "$pkgs" ] || { echo "no package watches $repo"; exit 0; }
+          else
+            tag='${{ inputs.tag }}'
+            if [ '${{ inputs.package }}' = all ]; then
+              pkgs=$(jq -r 'to_entries[].value[].pkg' index.json)
+            else
+              pkgs='${{ inputs.package }}'
+            fi
+          fi
+          {
+            echo "pkgs<<EOF"
+            echo "$pkgs"
+            echo "EOF"
+            echo "tag=$tag"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Bump, build, publish
+        run: |
+          set -u
+          have_aur_key=0
+          [ -n "$AUR_KEY" ] && have_aur_key=1
+          rc_total=0
+          for p in ${{ steps.resolve.outputs.pkgs }}; do
+            echo "=== $p (tag: ${TAG:-resync})"
+            if [ -n "$TAG" ]; then
+              set +e
+              tools/bump.sh "$p" "$TAG"
+              rc=$?
+              set -e
+              if [ $rc -ne 0 ] && [ $rc -ne 3 ]; then
+                echo "::error::$p bump failed"
+                rc_total=1
+                continue
+              fi
+            fi
+            tools/build.sh "$p" || { echo "::error::$p build failed"; rc_total=1; continue; }
+            if [ "$have_aur_key" = 1 ] || [ -z "$CI" ]; then
+              tools/publish.sh "$p" || { echo "::error::$p publish failed"; rc_total=1; }
+            else
+              echo "::warning::AUR_SSH_KEY not set, skipped AUR push for $p"
+            fi
+          done
+          exit $rc_total
+        env:
+          TAG: ${{ steps.resolve.outputs.tag }}
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## upstream-release"
+            echo "- trigger: ${{ github.event_name }}"
+            echo "- packages: ${{ steps.resolve.outputs.pkgs }}"
+            echo "- tag: ${{ steps.resolve.outputs.tag }}"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,179 @@
+# Maintainer: AnRan <2318621872 at qq dot com>
+# Contributor: zxp19821005 <zxp19821005 at 163 dot com> (launcher script approach)
+pkgname=zcode-bin
+_pkgname=ZCode
+pkgver=3.14.3
+_electronversion=41
+pkgrel=3
+pkgdesc="ZCode - AI-powered code editor by ZAI"
+arch=('x86_64')
+url="https://zcode.z.ai/"
+license=('LicenseRef-ZCode')
+depends=(
+  "electron${_electronversion}"
+  'python'
+  'python-reportlab'
+  'python-lxml'
+  'python-pillow'
+  'python-defusedxml'
+  'libstdc++'
+  'nodejs'
+  'libgcc'
+  'ripgrep'
+  'xdg-utils'
+)
+makedepends=(
+  'asar'
+)
+optdepends=(
+  'socat: expose headless app-server over TCP (zcode-headless serve)'
+)
+options=(
+  '!strip'
+)
+# Upstream artifact only — pinned by hash on every version bump. All local files
+# (patches/, runtime/, launchers/, units/, LICENSE) are git-tracked here and
+# referenced via $startdir directly, so editing them never touches checksums.
+source=(
+  "${pkgname%-bin}-${pkgver}-x86_64.deb::https://cdn-zcode.z.ai/zcode/electron/releases/${pkgver}/linux-x64/${_pkgname}-${pkgver}-linux-x64.deb"
+)
+sha256sums=('8512fb78889686c7ecdc91a609a86e6b408255a10db0c9afba0d3e377b0b5b4f')
+
+_get_app_dir() {
+  find "${srcdir}" -type f -name "resources.pak" -exec dirname {} + | head -n 1
+}
+
+_check_electron_version() {
+  echo "Verifying Electron version..."
+  local _app_dir=$(_get_app_dir)
+  local _main_exe=""
+  if [[ -n "${_app_dir}" ]]; then
+    _main_exe=$(find "${_app_dir}" -maxdepth 1 -type f -executable -printf '%s %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)
+  fi
+  if [[ -n "${_main_exe}" ]]; then
+    local _elec_ver=$(strings "${_main_exe}" | grep '^Chrome/[0-9.]* Electron/[0-9]' | cut -d'/' -f3 | cut -d'.' -f1 | head -n 1)
+    if [[ -n "${_elec_ver}" ]]; then
+      if [[ "${_elec_ver}" != "${_electronversion}" ]]; then
+        echo -e "\033[1;31mWarning: Electron version mismatch! Detected: ${_elec_ver}, Expected: ${_electronversion}\033[0m"
+      else
+        echo -e "Electron version verified: \033[1;31m${_elec_ver}\033[0m"
+      fi
+    fi
+  else
+    echo -e "\033[1;33mNote: Could not find Electron binary for version verification.\033[0m"
+  fi
+}
+
+prepare() {
+  bsdtar -xf "${srcdir}/data."*
+  _check_electron_version
+
+  # Launchers: copy out of the repo first (this dir is $srcdir, never $startdir),
+  # then substitute placeholders in the copy.
+  cp "${startdir}/launchers/${pkgname%-bin}.sh" "${srcdir}/${pkgname%-bin}.sh"
+  cp "${startdir}/launchers/${pkgname%-bin}-headless.sh" "${srcdir}/${pkgname%-bin}-headless.sh"
+  sed -i -e "
+        s/@electronversion@/${_electronversion}/g
+        s/@appname@/${pkgname%-bin}/g
+        s/@runname@/app.asar/g
+        s/@cfgdirname@/${_pkgname}/g
+    " "${srcdir}/${pkgname%-bin}.sh"
+
+  # Fix .desktop file: remove /opt/ZCode/ prefix so Exec references the launcher directly
+  sed -i "s/\/opt\/${_pkgname}\///g" "${srcdir}/usr/share/applications/${pkgname%-bin}.desktop"
+
+  # Unpack app.asar, patch process.resourcesPath, and repack
+  local _app_dir=$(_get_app_dir)
+
+  # Lean patch: env-gated tool denylist + description cap (fail-open if upstream renames the anchor property)
+  node "${startdir}/patches/lean.js" "${_app_dir}/resources/glm/zcode.cjs"
+
+  # Sleep inhibit: wrap the engine's turn/compact prototype methods so a logind
+  # sleep:idle inhibitor is held while agent work runs and released when idle
+  # (refcounted child, lease-capped so a SIGKILLed parent can't orphan the lock)
+  node "${startdir}/patches/sleep-inhibit.js" "${_app_dir}/resources/glm/zcode.cjs"
+
+  asar e "${_app_dir}/resources/app.asar" "${srcdir}/app.asar.unpacked"
+  rm -rf "${_app_dir}/resources/app.asar"
+  find "${srcdir}/app.asar.unpacked/out" -type f -exec sed -i "s/process.resourcesPath/'\/usr\/lib\/${pkgname%-bin}'/g" {} +
+
+  # Universal network blocker: swap the asar entry to a bootstrap that enforces a
+  # declarative blocklist (Aliyun hosts, snapshot credential path) at the
+  # network-API boundary — structure-independent, survives upstream refactors.
+  node "${startdir}/patches/block-install.js" \
+    "${srcdir}/app.asar.unpacked" \
+    "${srcdir}/zcode-block.gen.json" \
+    "${startdir}/runtime/block.mjs" \
+    "${startdir}/runtime/block.cjs"
+
+  # Telemetry kill patch (data-level backstop): blackhole Aliyun endpoints
+  # in app + engine, in case any traffic path bypasses the blocker
+  node "${startdir}/patches/telemetry.js" \
+    "${srcdir}/app.asar.unpacked/out" \
+    "${_app_dir}/resources/glm/zcode.cjs"
+
+  # Remote replay grace: upstream tears the relay bridge down 45s after a mobile
+  # disconnect; each teardown whose resync races the client surfaces as
+  # fault.subscription.recoveryFailed on the phone. 10 min covers lockscreen and
+  # network switches; longer gaps need a fresh snapshot anyway (8 MiB buffer).
+  node "${startdir}/patches/grace.js" \
+    "${srcdir}/app.asar.unpacked/out"
+
+  # Verification gate (fail-closed): the runtime is fail-open by design, but a
+  # patch that silently missed its anchor must not ship — fail the build here,
+  # where a human is watching the output.
+  node "${startdir}/patches/verify-build.js" \
+    "${srcdir}/app.asar.unpacked" \
+    "${_app_dir}/resources/glm/zcode.cjs"
+
+  asar p "${srcdir}/app.asar.unpacked" "${_app_dir}/resources/app.asar"
+  rm -rf "${srcdir}/app.asar.unpacked"
+
+  # Use system ripgrep instead of bundled
+  ln -sf "/usr/bin/rg" "${_app_dir}/resources/tools/ripgrep/rg"
+
+  # Remove unnecessary files to reduce package size
+  rm -rf \
+    "${_app_dir}/resources/"{apparmor-profile,package-type} \
+    "${_app_dir}/resources/app.asar.unpacked/node_modules/@lydell" \
+    "${_app_dir}/resources/app.asar.unpacked/node_modules/node-pty/"{bin,deps/winpty,prebuilds/{darwin-*,win32-*,linux-arm64}}
+}
+
+check() {
+  # Fast loopback self-tests: blocker shape matrix + lean-patch fixtures.
+  # (Full upstream-corpus regression is manual: tests/run.sh upstream)
+  "${startdir}/tests/run.sh" unit
+}
+
+package() {
+  # Install launcher scripts
+  install -Dm755 "${srcdir}/${pkgname%-bin}.sh" "${pkgdir}/usr/bin/${pkgname%-bin}"
+  install -Dm755 "${srcdir}/${pkgname%-bin}-headless.sh" "${pkgdir}/usr/bin/${pkgname%-bin}-headless"
+  install -Dm644 "${startdir}/units/${pkgname%-bin}-headless.service" "${pkgdir}/usr/lib/systemd/user/${pkgname%-bin}-headless.service"
+  install -Dm755 "${startdir}/runtime/relay.js" "${pkgdir}/usr/lib/${pkgname%-bin}/${pkgname%-bin}-relay.js"
+  install -Dm644 "${startdir}/units/${pkgname%-bin}-relay.service" "${pkgdir}/usr/lib/systemd/user/${pkgname%-bin}-relay.service"
+
+  # Install app resources
+  install -Dm755 -d "${pkgdir}/usr/lib/${pkgname%-bin}"
+  local _app_dir=$(_get_app_dir)
+  cp -a "${_app_dir}/resources/." "${pkgdir}/usr/lib/${pkgname%-bin}/"
+
+  # Network blocker runtime for plain-Node children (NODE_OPTIONS --require path);
+  # rules JSON generated by block-install.js in prepare() from the same source of truth
+  install -Dm755 "${startdir}/runtime/block.cjs" "${pkgdir}/usr/lib/${pkgname%-bin}/zcode-block.cjs"
+  install -Dm644 "${srcdir}/zcode-block.gen.json" "${pkgdir}/usr/lib/${pkgname%-bin}/zcode-block.json"
+
+  # Install .desktop file
+  install -Dm644 "${srcdir}/usr/share/applications/${pkgname%-bin}.desktop" -t "${pkgdir}/usr/share/applications"
+
+  # Install icons
+  find "${srcdir}" -type f \( -name "*.png" -o -name "*.svg" \) -path "*share/icons/*" | while read -r _i; do
+    _extension="${_i##*.}"
+    _icon_path="${_i#*share/icons/}"
+    _target_dir="/usr/share/icons/$(dirname "${_icon_path}")"
+    install -Dm644 "${_i}" "${pkgdir}${_target_dir}/${pkgname%-bin}.${_extension}"
+  done
+
+  # Install license
+  install -Dm644 "${startdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

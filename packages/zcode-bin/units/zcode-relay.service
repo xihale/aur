@@ -1,0 +1,21 @@
+[Unit]
+Description=ZCode headless relay device (phone pairing via z.ai relay)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /usr/lib/zcode/zcode-relay.js
+WorkingDirectory=%h/.zcode/workspace/default
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+# Privacy: declarative network blocklist injected into this process and children
+Environment="NODE_OPTIONS=--require /usr/lib/zcode/zcode-block.cjs"
+# Privacy: engine OpenTelemetry export off (belt for zcode-telemetry-patch.js)
+Environment=ZCODE_MODEL_TELEMETRY_ENABLED=0
+NoNewPrivileges=true
+UMask=0077
+
+[Install]
+WantedBy=default.target

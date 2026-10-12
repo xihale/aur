@@ -1,0 +1,25 @@
+post_install() {
+  cat <<EOF
+==> Pair this host from the Moshi app:
+      moshi host setup
+==> Install supported agent hooks (Claude Code, Codex, ...):
+      moshi install
+==> Run the daemon at login (user service):
+      systemctl --user enable --now moshi-hook.service
+==> pacman owns the binary; upgrade via your package manager,
+    not 'moshi update'.
+EOF
+}
+
+post_upgrade() {
+  cat <<EOF
+==> Restart the daemon to pick up the new binary:
+      systemctl --user restart moshi-hook.service
+EOF
+}
+
+post_remove() {
+  cat <<EOF
+==> Unpair the host if it is still registered in the Moshi app.
+EOF
+}

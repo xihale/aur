@@ -1,0 +1,23 @@
+pkgbase = moonbit-bin
+	pkgdesc = MoonBit language toolchain: build system (moon), compiler (moonc) and core libraries (prebuilt binaries)
+	pkgver = 0.1.20260920
+	pkgrel = 1
+	url = https://www.moonbitlang.com/
+	arch = x86_64
+	arch = aarch64
+	license = custom:MoonBit Public Source License
+	depends = git
+	conflicts = moon-bin
+	options = !strip
+	source = LICENSE.TXT::https://raw.githubusercontent.com/moonbitlang/moonbit-compiler/main/LICENSE.TXT
+	sha256sums = c4ed4d95e9fcbd1334ca52054177520833bd0453a87d7cf535a1b2762d515be5
+	source_x86_64 = moonbit-bin-0.1.20260920-linux-x86_64.tar.gz::https://cli.moonbitlang.com/binaries/latest/moonbit-linux-x86_64.tar.gz
+	source_x86_64 = moonbit-bin-core-0.1.20260920.tar.gz::https://cli.moonbitlang.com/cores/core-latest.tar.gz
+	sha256sums_x86_64 = 9226694de9ff978db1ecf820b7710c4224e84ec7a76b19a222d96f0cd4e31b6a
+	sha256sums_x86_64 = 6f18b8fdea18f85e628a75e4a1bd3977c5a5c9c6a836fd8824192b0e6bd91b14
+	source_aarch64 = moonbit-bin-0.1.20260920-linux-x86_64.tar.gz::https://cli.moonbitlang.com/binaries/latest/moonbit-linux-x86_64.tar.gz
+	source_aarch64 = moonbit-bin-core-0.1.20260920.tar.gz::https://cli.moonbitlang.com/cores/core-latest.tar.gz
+	sha256sums_aarch64 = 6443fd47b39e10ee25bdfa0250921e13a3a68649c02837aa382512b7d187c790
+	sha256sums_aarch64 = 6f18b8fdea18f85e628a75e4a1bd3977c5a5c9c6a836fd8824192b0e6bd91b14
+
+pkgname = moonbit-bin

@@ -1,0 +1,14 @@
+post_install() {
+    cat <<'EOF'
+==> clirelay-bin installed (user service).
+==> Before starting:
+    mkdir -p ~/.config/clirelay
+    cp /usr/share/doc/clirelay-bin/config.example.yaml ~/.config/clirelay/config.yaml
+==> Then:
+    systemctl --user enable --now clirelay.service
+EOF
+}
+
+post_upgrade() {
+    systemctl --user try-restart clirelay.service 2>/dev/null || true
+}

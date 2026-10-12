@@ -1,0 +1,15 @@
+{
+	"name": "aur-release-relay",
+	"private": true,
+	"type": "module",
+	"dependencies": {
+		"postal-mime": "^2.4.1"
+	},
+	"devDependencies": {
+		"wrangler": "^4.0.0"
+	},
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"tail": "wrangler tail"
+	}
+}

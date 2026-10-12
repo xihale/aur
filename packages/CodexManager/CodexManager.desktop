@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=CodexManager
+Comment=Codex CLI account pool manager and local gateway proxy
+Exec=systemctl --user start codexmanager
+Icon=CodexManager
+Terminal=false
+Categories=Network;System;
+StartupWMClass=CodexManager

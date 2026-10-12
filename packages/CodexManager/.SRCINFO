@@ -1,0 +1,22 @@
+pkgbase = codexmanager-bin
+	pkgdesc = Codex CLI account pool manager and local gateway proxy — binary release
+	pkgver = 0.1.19
+	pkgrel = 1
+	url = https://github.com/qxcnm/Codex-Manager
+	arch = x86_64
+	license = MIT
+	depends = gcc-libs
+	depends = openssl
+	optdepends = codexmanager-start: launch service + web UI from desktop
+	provides = codexmanager
+	conflicts = codexmanager
+	source = CodexManager-service-linux-x86_64.zip::https://github.com/qxcnm/Codex-Manager/releases/download/v0.1.19/CodexManager-service-linux-x86_64.zip
+	source = CodexManager.png
+	source = CodexManager.desktop
+	source = codexmanager.service
+	sha256sums = f77503337b75be4260ed21ef567179168c65f05fa6ddf83e42cf08110cd5935f
+	sha256sums = 7a7ea04514674c814f039b0211cd71ab8476cda9aeab4d05d05818c8ef1d00bc
+	sha256sums = 27de45f367ff48d0366b364dc10f273832de2df9c7282a6192d940aa29a35933
+	sha256sums = c9496e56184f05ffa8c7bb2e50109942994bf1fd8d9a338507a92285776bdeb9
+
+pkgname = codexmanager-bin

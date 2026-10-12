@@ -1,0 +1,13 @@
+[Unit]
+Description=CliRelay service
+After=network-online.target clirelay-postgres.service
+Wants=network-online.target clirelay-postgres.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/clirelay --config %h/.config/clirelay/config.yaml
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

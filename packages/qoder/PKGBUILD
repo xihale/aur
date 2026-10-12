@@ -1,0 +1,45 @@
+# Maintainer: liangshengfeng <liangshengfeng@star-net.cn>
+pkgname=qoder
+pkgver=1.0.0
+pkgrel=2
+pkgdesc="Agent workbench for human and AI software teams"
+arch=(x86_64)
+url="https://qoder.com"
+license=(LicenseRef-Qoder-Proprietary)
+depends=(
+    alsa-lib
+    at-spi2-core
+    gtk3
+    libnotify
+    libsecret
+    libxss
+    nss
+    nodejs
+    xdg-utils
+)
+optdepends=('xdg-desktop-portal: screen sharing under Wayland')
+conflicts=(qoder)
+options=('!strip' '!debug')
+source=("https://download.qoder.com/qoder-app/releases/latest/Qoder-linux-x86_64.rpm")
+sha256sums=('7fdeee54da3ec9de13eaee0c72e94e65a0d47211f430a2dc80cece9031d3e8f3')
+
+# Upstream serves a rolling "latest" build whose bytes change between
+# releases; always reuse the RPM already fetched to SRCDEST instead of
+# re-downloading it on every build.
+DLAGENTS=('file::/usr/bin/ln -s %o %u')
+
+package() {
+    cp -a --no-preserve=ownership "$srcdir"/opt "$pkgdir"/
+    cp -a --no-preserve=ownership "$srcdir"/usr "$pkgdir"/
+
+    # chrome-sandbox needs setuid root when user namespaces are unavailable
+    # (matches the RPM post-install script's fallback)
+    chmod 4755 "$pkgdir"/opt/Qoder/chrome-sandbox
+
+    # CLI entry point (the RPM manages this via update-alternatives)
+    install -d "$pkgdir"/usr/bin
+    ln -s /opt/Qoder/qoder "$pkgdir"/usr/bin/qoder
+
+    install -Dm644 "$pkgdir"/opt/Qoder/LICENSE.electron.txt \
+        "$pkgdir"/usr/share/licenses/$pkgbase/LICENSE
+}

@@ -1,0 +1,59 @@
+# Maintainer: xihale <i@xihale.top>
+# Contributor: xihale <i@xihale.top>
+
+pkgname=moonbit-bin
+pkgver=0.1.20260920
+pkgrel=1
+pkgdesc='MoonBit language toolchain: build system (moon), compiler (moonc) and core libraries (prebuilt binaries)'
+arch=('x86_64' 'aarch64')
+url='https://www.moonbitlang.com/'
+license=('custom:MoonBit Public Source License')
+depends=('git')
+# moonrepo 的 moon 任务运行器(AUR moon-bin)同样占用 /usr/bin/moon
+conflicts=('moon-bin')
+options=('!strip')
+
+# 上游只提供 latest 下载链接(core 同),无按版本归档;以下 sha256 锁定
+# pkgver 对应的快照。升级时:改 pkgver,重新记录全部 sha256。
+# 新版本号可先下载 tarball 解出 bin/moon 执行 `moon version` 查看。
+source=('LICENSE.TXT::https://raw.githubusercontent.com/moonbitlang/moonbit-compiler/main/LICENSE.TXT')
+sha256sums=('c4ed4d95e9fcbd1334ca52054177520833bd0453a87d7cf535a1b2762d515be5')
+source_x86_64=("$pkgname-$pkgver-linux-$CARCH.tar.gz::https://cli.moonbitlang.com/binaries/latest/moonbit-linux-$CARCH.tar.gz"
+               "$pkgname-core-$pkgver.tar.gz::https://cli.moonbitlang.com/cores/core-latest.tar.gz")
+sha256sums_x86_64=('9226694de9ff978db1ecf820b7710c4224e84ec7a76b19a222d96f0cd4e31b6a'
+                   '6f18b8fdea18f85e628a75e4a1bd3977c5a5c9c6a836fd8824192b0e6bd91b14')
+source_aarch64=("$pkgname-$pkgver-linux-$CARCH.tar.gz::https://cli.moonbitlang.com/binaries/latest/moonbit-linux-$CARCH.tar.gz"
+                "$pkgname-core-$pkgver.tar.gz::https://cli.moonbitlang.com/cores/core-latest.tar.gz")
+# core 库为平台无关源码,两个架构的校验和相同
+sha256sums_aarch64=('6443fd47b39e10ee25bdfa0250921e13a3a68649c02837aa382512b7d187c790'
+                    '6f18b8fdea18f85e628a75e4a1bd3977c5a5c9c6a836fd8824192b0e6bd91b14')
+
+prepare() {
+  # tarball 不携带执行位(官方安装脚本安装时补)
+  find "$srcdir/bin" -type f -exec chmod 755 {} +
+  rm -rf "$srcdir/lib/core"
+  mv "$srcdir/core" "$srcdir/lib/core"
+}
+
+build() {
+  export PATH="$srcdir/bin:$PATH"
+  # 与官方安装脚本一致:打包时预编译 core,产物在 lib/core/_build;
+  # 否则首次使用时需向系统目录写入编译产物,普通用户没有权限
+  "$srcdir/bin/moon" -C "$srcdir/lib/core" bundle --warn-list -a --all
+  "$srcdir/bin/moon" -C "$srcdir/lib/core" bundle --warn-list -a --target wasm-gc --quiet
+}
+
+package() {
+  # tarball 布局即官方 $MOON_HOME(bin/ lib/ include/ share/),工具链按
+  # 相对 exe 的 ../lib、../include 定位资源,装入 /usr 直接可用
+  cd "$srcdir"
+  mkdir -p "$pkgdir/usr"
+  cp -a bin "$pkgdir/usr/bin"
+  cp -a lib "$pkgdir/usr/lib"
+  cp -a include "$pkgdir/usr/include"
+  cp -a share "$pkgdir/usr/share"
+  # 官方安装脚本同款:moon 的 npx 式入口
+  ln -s moon "$pkgdir/usr/bin/moonx"
+  install -Dm644 CREDITS.md "$pkgdir/usr/share/licenses/$pkgname/CREDITS.md"
+  install -Dm644 LICENSE.TXT "$pkgdir/usr/share/licenses/$pkgname/LICENSE.TXT"
+}

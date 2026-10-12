@@ -1,0 +1,23 @@
+pkgbase = con-terminal-bin
+	pkgdesc = Native terminal emulator with built-in AI harness (prebuilt release binary)
+	pkgver = 0.1.0.beta.58
+	pkgrel = 1
+	url = https://github.com/nowledge-co/con-terminal
+	arch = x86_64
+	license = MIT
+	depends = fontconfig
+	depends = freetype2
+	depends = hicolor-icon-theme
+	depends = libxcb
+	depends = libxkbcommon-x11
+	depends = tree-sitter
+	depends = vulkan-icd-loader
+	depends = wayland
+	depends = zstd
+	provides = con-terminal
+	conflicts = con-terminal
+	conflicts = con-terminal-git
+	source = con-0.1.0.beta.58-linux-x86_64.tar.gz::https://github.com/nowledge-co/con-terminal/releases/download/v0.1.0-beta.58/con-0.1.0-beta.58-linux-x86_64.tar.gz
+	sha256sums = SKIP
+
+pkgname = con-terminal-bin

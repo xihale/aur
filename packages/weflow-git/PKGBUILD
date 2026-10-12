@@ -1,0 +1,64 @@
+# Maintainer: xihale <xihale13@qq.com>
+
+pkgname=weflow-git
+pkgver=2.1.0.r0.g6968936
+pkgrel=1
+pkgdesc="WeFlow - 本地微信实时聊天记录查看、分析与导出工具 (float0108 fork)"
+arch=('x86_64')
+url="https://github.com/float0108/WeFlow"
+license=('LicenseRef-CC-BY-NC-SA-4.0')
+depends=('alsa-lib' 'gtk3' 'nss' 'glibc' 'hicolor-icon-theme')
+makedepends=('git' 'npm' 'node-gyp' 'libvips' 'python')
+optdepends=('ffmpeg: media support'
+            'libnotify: desktop notifications')
+provides=('weflow')
+conflicts=('weflow')
+options=('!strip' '!debug')
+source=("git+${url}.git"
+        "weflow.desktop")
+sha256sums=('SKIP'
+            '92fb85d824d3b7075a6c9218190ee33f4c3f4aba9d809cf78760abbbb14111d0')
+
+pkgver() {
+  cd WeFlow
+  # No tags in this repo, use package.json version + git short hash
+  local _ver=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' package.json | head -1)
+  local _rev=$(git rev-parse --short HEAD)
+  printf "%s.r0.g%s" "$_ver" "$_rev"
+}
+
+build() {
+  cd WeFlow
+
+  # Install dependencies (skip postinstall to avoid electron-builder issues)
+  npm install --ignore-scripts
+
+  # Build frontend + electron
+  npx vite build
+
+  # Build electron app (unpacked directory only, no installer)
+  npx electron-builder --linux dir
+}
+
+package() {
+  local _outdir="WeFlow/release/linux-unpacked"
+
+  install -dm755 "${pkgdir}/opt/${pkgname}"
+  cp -a "${srcdir}/${_outdir}/"* "${pkgdir}/opt/${pkgname}/"
+
+  # Install .desktop file
+  install -Dm644 "${srcdir}/weflow.desktop" -t "${pkgdir}/usr/share/applications/"
+
+  # Install icon (convert from repo's logo.png)
+  install -Dm644 "${srcdir}/WeFlow/public/logo.png" "${pkgdir}/usr/share/pixmaps/weflow.png"
+
+  # Install symlink to binary
+  install -dm755 "${pkgdir}/usr/bin"
+  ln -sf "/opt/${pkgname}/weflow" "${pkgdir}/usr/bin/weflow"
+
+  # Fix permissions
+  find "${pkgdir}/opt/${pkgname}" -type d -exec chmod 755 {} +
+  chmod 755 "${pkgdir}/opt/${pkgname}/weflow" 2>/dev/null || true
+  # chrome-sandbox needs SUID bit if not using user namespace
+  chmod 4755 "${pkgdir}/opt/${pkgname}/chrome-sandbox" 2>/dev/null || true
+}

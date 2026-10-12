@@ -1,0 +1,46 @@
+# Maintainer: xihale <xiaotao2333@outlook.com>
+pkgname=codexmanager-bin
+pkgver=0.1.19
+pkgrel=1
+pkgdesc="Codex CLI account pool manager and local gateway proxy — binary release"
+arch=('x86_64')
+url="https://github.com/qxcnm/Codex-Manager"
+license=('MIT')
+depends=('gcc-libs' 'openssl')
+optdepends=('codexmanager-start: launch service + web UI from desktop')
+provides=('codexmanager')
+conflicts=('codexmanager')
+source=(
+	"CodexManager-service-linux-x86_64.zip::$url/releases/download/v$pkgver/CodexManager-service-linux-x86_64.zip"
+	"CodexManager.png"
+	"CodexManager.desktop"
+	"codexmanager.service"
+)
+sha256sums=(
+	'f77503337b75be4260ed21ef567179168c65f05fa6ddf83e42cf08110cd5935f'
+	'7a7ea04514674c814f039b0211cd71ab8476cda9aeab4d05d05818c8ef1d00bc'
+	'27de45f367ff48d0366b364dc10f273832de2df9c7282a6192d940aa29a35933'
+	'c9496e56184f05ffa8c7bb2e50109942994bf1fd8d9a338507a92285776bdeb9'
+)
+
+package() {
+	cd "CodexManager-service-linux-x86_64"
+
+	# binaries → /opt/codexmanager
+	install -Dm755 codexmanager-service "$pkgdir/opt/codexmanager/codexmanager-service"
+	install -Dm755 codexmanager-web     "$pkgdir/opt/codexmanager/codexmanager-web"
+	install -Dm755 codexmanager-start   "$pkgdir/opt/codexmanager/codexmanager-start"
+
+	# symlinks → /usr/bin
+	install -d "$pkgdir/usr/bin"
+	ln -s /opt/codexmanager/codexmanager-service "$pkgdir/usr/bin/codexmanager-service"
+	ln -s /opt/codexmanager/codexmanager-web     "$pkgdir/usr/bin/codexmanager-web"
+	ln -s /opt/codexmanager/codexmanager-start   "$pkgdir/usr/bin/codexmanager-start"
+
+	# desktop integration
+	install -Dm644 "$srcdir/CodexManager.desktop" "$pkgdir/usr/share/applications/CodexManager.desktop"
+	install -Dm644 "$srcdir/CodexManager.png"     "$pkgdir/usr/share/icons/hicolor/512x512/apps/CodexManager.png"
+
+	# systemd service
+	install -Dm644 "$srcdir/codexmanager.service" "$pkgdir/usr/lib/systemd/user/codexmanager.service"
+}

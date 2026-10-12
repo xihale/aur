@@ -1,0 +1,13 @@
+[Unit]
+Description=Moshi host daemon (moshi-hook)
+Documentation=https://getmoshi.app/docs
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/moshi-hook serve
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

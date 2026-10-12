@@ -1,0 +1,1 @@
+{"aur": false, "watch": {"github": "GDUTMeow/GDUTCourseGrabber", "tag_to_pkgver": ["s/^v//"]}, "build_test": true, "notes": "AUR package no longer listed (2026-10-12)"}

@@ -1,0 +1,23 @@
+[Unit]
+Description=ZCode headless agent backend (JSON-RPC over TCP via socat)
+# Bridge one app-server per TCP connection on port 8819
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/zcode-headless serve 8819
+Restart=on-failure
+RestartSec=3
+# Keep memory in check: node heap cap per spawned app-server
+Environment="NODE_OPTIONS=--require /usr/lib/zcode/zcode-block.cjs --max-old-space-size=1024"
+# Privacy: engine OpenTelemetry export off (belt for zcode-telemetry-patch.js)
+Environment=ZCODE_MODEL_TELEMETRY_ENABLED=0
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
+ProtectSystem=full
+MemoryHigh=1500M
+MemoryMax=2G
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,1 @@
+{"aur": false, "watch": {"github": "qxcnm/Codex-Manager", "tag_to_pkgver": ["s/^v//"]}, "build_test": true}

@@ -1,0 +1,22 @@
+post_install() {
+  systemd-tmpfiles --create awesunhost.conf
+  cat <<EOM
+==> 向日葵客户端 (awesunhost) 已安装。
+==> 被控/常驻功能需要启动后台服务:
+      sudo systemctl enable --now runawesunhost.service
+==> 启动图形界面: awesunhost, 或应用菜单中的 "AweSunHost"。
+EOM
+}
+
+post_upgrade() {
+  systemd-tmpfiles --create awesunhost.conf
+  if systemctl is-active --quiet runawesunhost.service; then
+    echo '==> 检测到 runawesunhost 正在运行, 建议重启以加载新版本:'
+    echo '      sudo systemctl restart runawesunhost.service'
+  fi
+}
+
+pre_remove() {
+  systemctl stop runawesunhost.service 2>/dev/null || true
+  systemctl disable runawesunhost.service 2>/dev/null || true
+}

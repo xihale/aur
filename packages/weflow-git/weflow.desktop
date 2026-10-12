@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=WeFlow
+Comment=WeFlow - 微信聊天记录查看、分析与导出工具
+Exec=weflow %U
+Icon=weflow
+Type=Application
+Categories=Utility;
+StartupNotify=true

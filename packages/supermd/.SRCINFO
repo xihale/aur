@@ -1,0 +1,11 @@
+pkgbase = supermd
+	pkgdesc = SuperMD is an extension of Markdown used by https://zine-ssg.io
+	pkgver = 0
+	pkgrel = 0
+	url = https://github.com/kristoff-it/supermd
+	arch = any
+	license = MIT
+	source = git+https://github.com/kristoff-it/supermd.git
+	sha256sums = SKIP
+
+pkgname = supermd

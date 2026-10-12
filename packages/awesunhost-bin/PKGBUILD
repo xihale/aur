@@ -1,0 +1,63 @@
+# Maintainer: xihale <i@xihale.top>
+pkgname=awesunhost-bin
+pkgver=5.8.1.29563
+pkgrel=1
+pkgdesc='贝锐向日葵远程控制 Linux 客户端 (Sunlogin/AweSun proprietary remote control client, official .deb repack)'
+arch=('x86_64' 'aarch64')
+url='https://sunlogin.oray.com/download'
+license=('LicenseRef-Proprietary')
+depends=(
+  'glibc'
+  'gcc-libs'
+  'gtk3'
+  'libappindicator-gtk3'
+  'libxss'
+  'libepoxy'
+  'util-linux-libs'
+  'libcrypt.so=1-64'
+  'nss'
+  'nspr'
+  'alsa-lib'
+  'gconf'  # libcef.so 硬依赖 libgconf-2.so.4; Arch 官方仓库已移除, 见 AUR/archlinuxcn 的 gconf
+)
+optdepends=(
+  'webkit2gtk-4.1: 客户端内嵌网页模块'
+  'intel-media-va-driver-non-free: Intel 核显硬件编码'
+  'libvpl2: Intel 硬件编码'
+)
+provides=('awesunhost' 'sunlogin')
+conflicts=('awesunhost' 'sunloginclient' 'sunloginenterprise' 'awesun' 'awesuncli')
+install=awesunhost-bin.install
+options=('!strip')
+source=('awesunhost.tmpfiles')
+sha256sums=('c51812aeac971d95c9507f00676a71779fbf284e82cb36b4354529568e4f7a17')
+source_x86_64=("$pkgname-$pkgver-x86_64.deb::https://dl.oray.com/sl/linux/awesunhost-$pkgver-x86_64.deb")
+sha256sums_x86_64=('802e5ed1b634dced80e7cfff394a34066e017cdf46010346f11843a2d090432a')
+source_aarch64=("$pkgname-$pkgver-aarch64.deb::https://dw.oray.com/sl/linux/awesunhost-$pkgver-aarch64.deb")
+sha256sums_aarch64=('6d4ca496fb15fa9ed1b9afa034c8a392ababe6eef3d3c9f24835d93ce57b4a2d')
+
+# 稳定版版本号/下载地址查询接口（升级时更新 pkgver 与 sha256sums）:
+#   https://client-webapi.oray.com/softwares/SLRC_LINUX_X86_64_DEB?versiontype=stable
+#   https://client-webapi.oray.com/softwares/SLRC_LINUX_ARM64_DEB?versiontype=stable
+
+package() {
+  # 解包 .deb 数据区: /usr/local/awesunhost, /usr/bin/awesunhost 链接, desktop 文件
+  bsdtar -xOf "$srcdir/$pkgname-$pkgver-${CARCH}.deb" data.tar.xz |
+    bsdtar -xJf - -C "$pkgdir"
+
+  # 上游 postinst 把单元文件拷到 /etc; 按打包规范装到 /usr/lib
+  install -Dm644 "$pkgdir/usr/local/awesunhost/scripts/runawesunhost.service" \
+    "$pkgdir/usr/lib/systemd/system/runawesunhost.service"
+
+  # 上游 postinst 创建 /var/log/awesunhost (0777)
+  install -Dm644 awesunhost.tmpfiles "$pkgdir/usr/lib/tmpfiles.d/awesunhost.conf"
+
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/licenses/$pkgname/LICENSE" <<'EOF'
+AweSunHost (向日葵客户端标准版) for Linux
+Copyright (c) Oray (上海贝锐信息科技股份有限公司). All rights reserved.
+
+This is proprietary software. Its use, reproduction and distribution are
+governed by the Oray end-user license agreement shown at first launch and
+published at https://sunlogin.oray.com/
+EOF
+}

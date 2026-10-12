@@ -1,0 +1,33 @@
+# makepkg artifacts
+pkg/
+src/
+*.pkg.tar.zst
+*.tar.gz
+*.tar.xz
+*.deb
+*.zip
+*.rpm
+*.tar.zst
+
+# local scratch, not part of the monorepo
+/.attic/
+/.electron-gyp/
+/zcode-bin-analysis/
+/actions_test/
+/t/
+/PKGBUILD/
+/sqlmap/
+/release-notes-*.md
+
+# per-package scratch
+node_modules/
+/packages/ziggy-git/test.sh
+/packages/ziggy-git/v.sh
+/packages/ziggy-git/ziggy.git/
+/packages/snirect-bin/snirect-bin-0.2.4-x86_64
+/packages/snirect-bin/snirect-bin-0.3.0-x86_64
+/packages/awesunhost-bin/usr/
+/packages/clirelay-bin/clirelay.tgz
+/packages/con-terminal/con-terminal/
+/packages/motrix-git/motrix.git/
+*.tgz

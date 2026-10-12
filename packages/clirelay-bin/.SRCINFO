@@ -1,0 +1,22 @@
+pkgbase = clirelay-bin
+	pkgdesc = Proxy server providing OpenAI/Gemini/Claude/Codex compatible API interfaces (CliRelay fork)
+	pkgver = 0.4.25
+	pkgrel = 1
+	url = https://github.com/kittors/CliRelay
+	install = clirelay-bin.install
+	arch = x86_64
+	arch = aarch64
+	license = MIT
+	depends = glibc
+	provides = clirelay
+	conflicts = clirelay
+	conflicts = cli-proxy-api
+	conflicts = cli-proxy-api-bin
+	source = clirelay.service
+	sha256sums = 2c62e577cb0023c3fe19c9ead81eeb67eb49572c511514295582c6a5f0b2e59c
+	source_x86_64 = CliRelay-0.4.25-x86_64.tar.gz::https://github.com/kittors/CliRelay/releases/download/v0.4.25/CliRelay_0.4.25_linux_amd64.tar.gz
+	sha256sums_x86_64 = 7fdc5810cb4361f132187b7824062f63250bbd705c44ed38a7d90540859416f8
+	source_aarch64 = CliRelay-0.4.25-aarch64.tar.gz::https://github.com/kittors/CliRelay/releases/download/v0.4.25/CliRelay_0.4.25_linux_arm64.tar.gz
+	sha256sums_aarch64 = 46499529a798e962829e3c4472d4ede67f9f953dde2f7a5e30e9d67401c786bb
+
+pkgname = clirelay-bin

@@ -1,0 +1,24 @@
+pkgbase = qoder
+	pkgdesc = Agent workbench for human and AI software teams
+	pkgver = 1.0.0
+	pkgrel = 2
+	url = https://qoder.com
+	arch = x86_64
+	license = LicenseRef-Qoder-Proprietary
+	depends = alsa-lib
+	depends = at-spi2-core
+	depends = gtk3
+	depends = libnotify
+	depends = libsecret
+	depends = libxss
+	depends = nss
+	depends = nodejs
+	depends = xdg-utils
+	optdepends = xdg-desktop-portal: screen sharing under Wayland
+	conflicts = qoder
+	options = !strip
+	options = !debug
+	source = https://download.qoder.com/qoder-app/releases/latest/Qoder-linux-x86_64.rpm
+	sha256sums = 7fdeee54da3ec9de13eaee0c72e94e65a0d47211f430a2dc80cece9031d3e8f3
+
+pkgname = qoder
