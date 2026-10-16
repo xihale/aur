@@ -1,6 +1,6 @@
-# makepkg artifacts
-pkg/
-src/
+# makepkg artifacts（只在各包目录里生成，写成全局 pkg/、src/ 会误伤 worker/src/）
+/packages/*/pkg/
+/packages/*/src/
 *.pkg.tar.zst
 *.tar.gz
 *.tar.xz
