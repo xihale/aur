@@ -63,7 +63,22 @@ emit_sources | sort -u | while IFS=$'\t' read -r bucket entry; do
 	printf '%s\t%s\t%s\n' "$bucket" "$name" "$h"
 done > "$work/map.raw"
 sort -u -o "$work/map.tsv" "$work/map.raw"
-[ -s "$work/map.tsv" ] || die "no sources resolved"
+# Metapackages legitimately declare no source arrays at all.
+if [ ! -s "$work/map.tsv" ]; then
+	if bash -c '
+		source ./PKGBUILD >/dev/null 2>&1
+		for v in $(compgen -A variable); do
+			case $v in
+				source|source_*) declare -p "$v" 2>/dev/null | grep -q "declare -a" && exit 0 ;;
+			esac
+		done
+		exit 1
+	'; then
+		die "no sources resolved"
+	fi
+	echo "mksums: $pkgdir declares no sources, nothing to do"
+	exit 0
+fi
 
 # Rewrite the checksum blocks in PKGBUILD.
 new=$(mktemp)

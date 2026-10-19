@@ -43,7 +43,8 @@ flowchart LR
 Checksums: `tools/mksums.sh` re-resolves every source array
 (any/x86_64/aarch64/armv7h/i686) by sourcing the PKGBUILD per CARCH and
 downloading each artifact — `updpkgsums` only handles the running arch and
-silently stales the rest. VCS sources get `SKIP`.
+silently stales the rest. VCS sources get `SKIP`; source-less metapackages
+are skipped.
 
 ## Local usage
 
@@ -103,6 +104,13 @@ gdut_course_grabber.
 Manual (no release emails to follow): moonbit-bin/qoder (rolling latest
 URLs), awesunhost-bin (oray), moshi-bin (cdn.getmoshi.app),
 unlock-music-cli-bin (Gitea), zcode-bin (vendor .deb), gcc16.
+
+Manual, Gitea upstream (git.zacharyzhang.com, no GitHub release emails):
+ely-doc-bin, ely-mark-bin, ely-pdf-bin, ely-show-bin, ely-table-bin,
+ely-tree-bin and the `ely-office-bin` metapackage pulling all six. Bump with
+`tools/bump.sh ely-doc-bin vX.Y.Z` per package (upstream ships ready Arch
+packages under `/opt/ely-office/<app>`, repackaged verbatim). ELYTerminal is
+already packaged on AUR as `elyterminal-bin`, so it is not mirrored here.
 
 No maintenance needed: `*-git` packages (motrix, ziggy, supermd, weflow,
 con-terminal, affine-*-dev) and sqlmap (official Arch packaging, stays at
