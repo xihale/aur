@@ -1,10 +1,11 @@
 {
   "aur": true,
   "watch": {
+    "github": "ELY-Open-Source/ElyOffice",
     "tag_to_pkgver": [
       "s/^v//"
     ]
   },
-  "notes": "upstream Gitea (git.zacharyzhang.com/ElyOffice), no GitHub release emails; bump manually: tools/bump.sh ely-doc-bin vX.Y.Z",
+  "notes": "upstream GitHub (ELY-Open-Source/ElyOffice), release-email auto-bump; manual: tools/bump.sh ely-doc-bin vX.Y.Z",
   "build_test": true
 }

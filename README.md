@@ -94,23 +94,20 @@ for con-terminal-style `v0.1.0-beta.58` → `0.1.0.beta.58`.
 
 Watch the repo in GitHub (Releases only) and you're done.
 
-## Package status (2026-10-12)
+## Package status (2026-10-20)
 
 Watched (automatic): strix-bin, cli-proxy-api-bin, snirect, snirect-bin,
-v2rayn-bin, cloudpan189-go-mauruppi-bin, ncmdump-latest-bin + WIP:
-codexmanager (CodexManager/), clirelay-bin, con-terminal-bin,
-gdut_course_grabber.
+v2rayn-bin, cloudpan189-go-mauruppi-bin, ncmdump-latest-bin, ely-doc-bin,
+ely-mark-bin, ely-pdf-bin, ely-show-bin, ely-table-bin, ely-tree-bin and
+the `ely-office-bin` metapackage pulling all six (ELY-Open-Source/ElyOffice,
+ships ready Arch packages under `/opt/ely-office/<app>`, repackaged
+verbatim) + WIP: codexmanager (CodexManager/), clirelay-bin,
+con-terminal-bin, gdut_course_grabber. ELYTerminal is already packaged on
+AUR as `elyterminal-bin`, so it is not mirrored here.
 
 Manual (no release emails to follow): moonbit-bin/qoder (rolling latest
 URLs), awesunhost-bin (oray), moshi-bin (cdn.getmoshi.app),
 unlock-music-cli-bin (Gitea), zcode-bin (vendor .deb), gcc16.
-
-Manual, Gitea upstream (git.zacharyzhang.com, no GitHub release emails):
-ely-doc-bin, ely-mark-bin, ely-pdf-bin, ely-show-bin, ely-table-bin,
-ely-tree-bin and the `ely-office-bin` metapackage pulling all six. Bump with
-`tools/bump.sh ely-doc-bin vX.Y.Z` per package (upstream ships ready Arch
-packages under `/opt/ely-office/<app>`, repackaged verbatim). ELYTerminal is
-already packaged on AUR as `elyterminal-bin`, so it is not mirrored here.
 
 No maintenance needed: `*-git` packages (motrix, ziggy, supermd, weflow,
 con-terminal, affine-*-dev) and sqlmap (official Arch packaging, stays at
