@@ -47,6 +47,28 @@ fi
 # Monorepo commit
 cd "$ROOT"
 git add "packages/$dir"
+# Untrack downloaded remote sources (release binaries, tarballs, git
+# clones): they are large — AUR rejects blobs over 488K — and makepkg
+# fetches them anyway. Local sources (install scripts, patches, icons)
+# stay tracked and published.
+mapfile -t remote_src < <(awk -v p="packages/$dir" '
+	function emit(s) {
+		if (s ~ /::/) sub(/::.*/, "", s)
+		else {
+			sub(/[?#].*/, "", s)
+			sub(/.*\//, "", s)
+			sub(/\.git$/, "", s)
+		}
+		if (s != "") print p "/" s
+	}
+	/^[ \t]*source(_[a-zA-Z0-9]+)? = / && /:\/\/|::/ {
+		s = $0
+		sub(/^[ \t]*source(_[a-zA-Z0-9]+)? = /, "", s)
+		emit(s)
+	}' "$PACKAGES/$dir/.SRCINFO" 2>/dev/null)
+if [ ${#remote_src[@]} -gt 0 ]; then
+	git rm -q --cached --ignore-unmatch "${remote_src[@]}"
+fi
 if ! git diff --cached --quiet; then
 	git "${ident_args[@]}" commit -qm "$dir $ver"
 	if [ -n "${CI:-}" ]; then
