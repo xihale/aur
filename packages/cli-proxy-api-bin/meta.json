@@ -1,1 +1,1 @@
-{"aur": true, "watch": {"github": "router-for-me/CLIProxyAPI", "tag_to_pkgver": ["s/^v//"]}, "build_test": true}
+{"aur": false, "watch": {"github": "router-for-me/CLIProxyAPI", "tag_to_pkgver": ["s/^v//"]}, "build_test": true}
