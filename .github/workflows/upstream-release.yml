@@ -86,9 +86,9 @@ jobs:
         run: |
           set -u
           have_aur_key=0
-          [ -n "$AUR_KEY" ] && have_aur_key=1
+          if [ -n "$AUR_KEY" ]; then have_aur_key=1; fi
           rc_total=0
-          for p in ${{ steps.resolve.outputs.pkgs }}; do
+          for p in $PKGS; do
             echo "=== $p (tag: ${TAG:-resync})"
             if [ -n "$TAG" ]; then
               set +e
@@ -111,6 +111,7 @@ jobs:
           exit $rc_total
         env:
           TAG: ${{ steps.resolve.outputs.tag }}
+          PKGS: ${{ steps.resolve.outputs.pkgs }}
 
       - name: Summary
         if: always()
