@@ -29,15 +29,22 @@ fi
 # (bad tag, broken URL) leaves the package untouched.
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
-if [ "$(id -u)" = 0 ]; then chown builder:builder "$work"; fi
 cp PKGBUILD "$work/"
+# Local files the PKGBUILD names (install script, shipped sources) must be
+# staged too: makepkg --printsrcinfo aborts when $install is missing.
+mapfile -t local_files < <(local_pkgbuild_files "$PWD")
+for f in ${local_files[@]+"${local_files[@]}"}; do
+	install -Dm644 -- "$f" "$work/$f"
+done
 
 sed -i "s/^pkgver=.*/pkgver=$newver/" "$work/PKGBUILD"
 sed -i 's/^pkgrel=.*/pkgrel=1/' "$work/PKGBUILD"
 "$TOOLS/mksums.sh" "$work"
 # runner root umask can leave staged files 600; makepkg runs as builder
-chmod 644 "$work/PKGBUILD"
+if [ "$(id -u)" = 0 ]; then chown -R builder:builder "$work"; fi
+chmod -R a+rX "$work"
 ( cd "$work" && run_as_builder makepkg --printsrcinfo > .SRCINFO )
+chmod 644 "$work/.SRCINFO"
 mv "$work/PKGBUILD" PKGBUILD
 mv "$work/.SRCINFO" .SRCINFO
 

@@ -1,6 +1,8 @@
 # makepkg artifacts（只在各包目录里生成，写成全局 pkg/、src/ 会误伤 worker/src/）
 /packages/*/pkg/
 /packages/*/src/
+# build.sh downloads sources here instead of next to the PKGBUILD
+/packages/*/src.d/
 *.pkg.tar.zst
 *.tar.gz
 *.tar.xz

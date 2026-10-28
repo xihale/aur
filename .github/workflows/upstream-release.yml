@@ -32,6 +32,7 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     container:
       image: archlinux:base-devel
     env:
@@ -65,7 +66,7 @@ jobs:
           if [ "${{ github.event_name }}" = repository_dispatch ]; then
             repo='${{ github.event.client_payload.repo }}'
             tag='${{ github.event.client_payload.tag }}'
-            pkgs=$(jq -r --arg r "$repo" '.[$r][].pkg' index.json)
+            pkgs=$(jq -r --arg r "$repo" '(.[$r] // [])[].pkg' index.json)
             [ -n "$pkgs" ] || { echo "no package watches $repo"; exit 0; }
           else
             tag='${{ inputs.tag }}'
@@ -83,27 +84,51 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Bump, build, publish
+        shell: bash
         run: |
           set -u
           have_aur_key=0
           if [ -n "$AUR_KEY" ]; then have_aur_key=1; fi
           rc_total=0
+          # retry_step <attempts> <extra-ok-rc|-> <cmd...>: a transient
+          # download/push hiccup must not red the whole release run.
+          retry_step() {
+            n=$1; ok=$2; shift 2
+            a=1
+            while :; do
+              set +e
+              "$@"
+              rc=$?
+              set -e
+              if [ "$rc" -eq 0 ] || { [ "$ok" != - ] && [ "$rc" -eq "$ok" ]; }; then
+                return 0
+              fi
+              if [ "$a" -ge "$n" ]; then return "$rc"; fi
+              echo "::warning::attempt $a/$n failed (rc=$rc): $*"
+              a=$((a + 1))
+              sleep $((a * 5))
+            done
+          }
           for p in $PKGS; do
             echo "=== $p (tag: ${TAG:-resync})"
             if [ -n "$TAG" ]; then
-              set +e
-              tools/bump.sh "$p" "$TAG"
-              rc=$?
-              set -e
-              if [ $rc -ne 0 ] && [ $rc -ne 3 ]; then
+              # exit 3 = already at that version, not a failure
+              if ! retry_step 3 3 tools/bump.sh "$p" "$TAG"; then
                 echo "::error::$p bump failed"
                 rc_total=1
                 continue
               fi
             fi
-            tools/build.sh "$p" || { echo "::error::$p build failed"; rc_total=1; continue; }
+            if ! retry_step 2 - tools/build.sh "$p"; then
+              echo "::error::$p build failed"
+              rc_total=1
+              continue
+            fi
             if [ "$have_aur_key" = 1 ] || [ -z "$CI" ]; then
-              tools/publish.sh "$p" || { echo "::error::$p publish failed"; rc_total=1; }
+              if ! retry_step 2 - tools/publish.sh "$p"; then
+                echo "::error::$p publish failed"
+                rc_total=1
+              fi
             else
               echo "::warning::AUR_SSH_KEY not set, skipped AUR push for $p"
             fi

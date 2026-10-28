@@ -39,12 +39,18 @@ flowchart LR
    + commit monorepo).
 4. Already-current versions are skipped (exit 3); a 404 tag aborts that
    package with the tree untouched.
+5. Transient failures are retried (bump 3×, build/publish 2×) and the
+   monorepo push rebases onto a moved `main` (`validate.yml` regenerates
+   `index.json`). Downloaded sources are never committed: the AUR rejects
+   blobs over 488 KiB, so `publish.sh` stages tracked files only and
+   aborts before pushing if a staged blob is too large.
 
 Checksums: `tools/mksums.sh` re-resolves every source array
 (any/x86_64/aarch64/armv7h/i686) by sourcing the PKGBUILD per CARCH and
 downloading each artifact — `updpkgsums` only handles the running arch and
 silently stales the rest. VCS sources get `SKIP`; source-less metapackages
-are skipped.
+are skipped. `build.sh` downloads into `src.d/` (gitignored) instead of
+next to the PKGBUILD.
 
 ## Local usage
 

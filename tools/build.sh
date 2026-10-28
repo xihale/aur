@@ -16,5 +16,10 @@ if [ "$(id -u)" = 0 ]; then
 		pacman -S --noconfirm --needed --asdeps $deps
 	fi
 fi
-run_as_builder makepkg -f --nodeps --noprogressbar --noconfirm
+# makepkg defaults SRCDEST to the startdir, so downloaded sources land next
+# to the PKGBUILD as untracked files — they then get staged by publish and
+# bounce off the AUR blob limit. src.d/ is gitignored (and separate from
+# srcdir, which makepkg symlinks into).
+run_as_builder env SRCDEST="$PWD/src.d" \
+	makepkg -f --nodeps --noprogressbar --noconfirm
 echo "build: $dir OK"
