@@ -21,16 +21,8 @@ AUR_URL=${AUR_URL:-ssh://aur@aur.archlinux.org}
 
 # --- monorepo staging, before anything is pushed ------------------------
 cd "$ROOT"
-# Tracked changes only (bump touches PKGBUILD + .SRCINFO), plus new local
-# files the PKGBUILD names (install scripts, patches). Downloaded sources
-# are never added: they are large — AUR rejects blobs over 488K — and
-# makepkg fetches them anyway.
-git add -u -- "packages/$dir"
-mapfile -t local_src < <(local_pkgbuild_files "$pdir")
-if [ ${#local_src[@]} -gt 0 ]; then
-	git add -f -- "${local_src[@]/#/packages/$dir/}"
-fi
-# Safety net for remote sources tracked before the rule above existed.
+# Downloaded sources never belong in git: AUR rejects blobs over 488 KiB
+# and makepkg refetches them anyway. Untrack any an older commit added.
 mapfile -t remote_src < <(awk -v p="packages/$dir" '
 	function emit(s) {
 		if (s ~ /::/) sub(/::.*/, "", s)
@@ -49,8 +41,34 @@ mapfile -t remote_src < <(awk -v p="packages/$dir" '
 if [ ${#remote_src[@]} -gt 0 ]; then
 	git rm -q --cached --ignore-unmatch "${remote_src[@]}"
 fi
-# Refuse to publish a blob the AUR will reject: fail here, not after the
-# push bounces with the blob already in monorepo history.
+
+# AUR payload: every tracked file except meta.json — minus any oversized
+# artifact, which cannot be pushed and is untracked here.
+mapfile -t local_src < <(local_pkgbuild_files "$pdir")
+mapfile -t pkg_files < <( (cd "$pdir" && git ls-files) | grep -v '^meta.json$' || true )
+aur_files=()
+for f in ${pkg_files[@]+"${pkg_files[@]}"}; do
+	size=$(stat -c %s -- "$pdir/$f" 2>/dev/null || echo 0)
+	if [ "$size" -gt 490000 ]; then
+		case " ${local_src[*]-} " in
+			*" $f "*)
+				die "$dir/$f is named by the PKGBUILD, but the AUR rejects blobs over 488 KiB"
+				;;
+		esac
+		echo "publish: untracking oversized $dir/$f ($((size / 1024)) KiB)" >&2
+		git rm -q --cached --ignore-unmatch -- "packages/$dir/$f"
+		continue
+	fi
+	aur_files+=("$f")
+done
+
+# Tracked changes only (bump touches PKGBUILD + .SRCINFO), plus new local
+# files the PKGBUILD names (install scripts, patches).
+git add -u -- "packages/$dir"
+if [ ${#local_src[@]} -gt 0 ]; then
+	git add -f -- "${local_src[@]/#/packages/$dir/}"
+fi
+# Refuse to commit a blob the AUR would reject.
 big=()
 while IFS= read -r -d '' f; do
 	[ -f "$f" ] || continue
@@ -69,11 +87,10 @@ if [ "$aur" = true ]; then
 	cd "$tmp/$name"
 	git rm -rq . 2>/dev/null || true
 	find . -mindepth 1 -maxdepth 1 -not -name .git -exec rm -rf {} + 2>/dev/null || true
-	(cd "$pdir" && git ls-files) | grep -v '^meta.json$' |
-		while IFS= read -r f; do
-			mkdir -p "$(dirname "$f")"
-			cp "$pdir/$f" "$f"
-		done
+	for f in ${aur_files[@]+"${aur_files[@]}"}; do
+		mkdir -p "$(dirname "$f")"
+		cp "$pdir/$f" "$f"
+	done
 	git add -A
 	if git diff --cached --quiet; then
 		echo "publish: AUR $name already up to date"

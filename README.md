@@ -42,8 +42,9 @@ flowchart LR
 5. Transient failures are retried (bump 3×, build/publish 2×) and the
    monorepo push rebases onto a moved `main` (`validate.yml` regenerates
    `index.json`). Downloaded sources are never committed: the AUR rejects
-   blobs over 488 KiB, so `publish.sh` stages tracked files only and
-   aborts before pushing if a staged blob is too large.
+   blobs over 488 KiB, so `publish.sh` publishes tracked files only,
+   untracks oversized artifacts, and aborts if a file the PKGBUILD needs
+   exceeds the limit.
 
 Checksums: `tools/mksums.sh` re-resolves every source array
 (any/x86_64/aarch64/armv7h/i686) by sourcing the PKGBUILD per CARCH and
