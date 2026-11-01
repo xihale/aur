@@ -55,8 +55,12 @@ emit_sources | sort -u | while IFS=$'\t' read -r bucket entry; do
 		git+*|svn+*|hg+*|bzr+*) h=SKIP ;;
 		*://*)
 			f="$work/artifact"
-			curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors \
-				--connect-timeout 20 -o "$f" "$url" || die "download failed: $url"
+			if ! fetch_stable "$url" "$f"; then
+				# rc 4: upstream asset never became ready — terminal, not
+				# transient; the release workflow must not blind-retry.
+				echo "mksums: upstream asset never became ready: $url" >&2
+				exit 4
+			fi
 			h=$(sha256sum "$f" | cut -d' ' -f1)
 			;;
 		*) continue ;; # local file shipped in the repo, not checksummed

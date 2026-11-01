@@ -73,6 +73,61 @@ push_retry() {
 	done
 }
 
+# --- upstream release assets ------------------------------------------------
+# Release announcements (email worker -> repository_dispatch) race the asset
+# upload: upstream publishes the tag, then spends minutes — sometimes the
+# better part of an hour — uploading, deleting and replacing release assets.
+# Hashing a mid-flight asset bakes sha256sums the later build cannot
+# reproduce, so fetch only after the advertised size has settled.
+
+# asset_len <url> — final content-length after redirects; empty = no header
+asset_len() {
+	local h
+	h=$(curl -fsIL --retry 2 --retry-delay 2 --retry-all-errors \
+		--connect-timeout 20 "$1" 2>/dev/null) || return 1
+	awk '{t = tolower($0)} t ~ /^content-length:/ {gsub("\r", ""); v = $2} END {if (v != "") print v}' <<<"$h"
+}
+
+# wait_for_url <url> — poll until the URL answers and its size is stable.
+# rc 4 = still not ready after WAIT_ASSETS_TIMEOUT seconds (default 1800).
+wait_for_url() {
+	local url=$1
+	local timeout=${WAIT_ASSETS_TIMEOUT:-1800} waited=0 last="" len
+	while :; do
+		[ "$waited" -lt "$timeout" ] || return 4
+		if len=$(asset_len "$url"); then
+			if [ -z "$len" ] || [ "$len" = "$last" ]; then
+				return 0 # no length advertised (streamed) or size settled
+			fi
+			last=$len
+			sleep 3 # quick second probe to confirm the size stopped moving
+			waited=$((waited + 3))
+			continue
+		fi
+		sleep 20 # 404 / unreachable: asset not published yet
+		waited=$((waited + 20))
+	done
+}
+
+# fetch_stable <url> <outfile> — wait_for_url, download, then verify the file
+# still matches the advertised size (catches an asset replaced mid-download).
+fetch_stable() {
+	local url=$1 out=$2 attempt len got
+	for attempt in 1 2 3; do
+		wait_for_url "$url" || return 4
+		curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors \
+			--connect-timeout 20 -o "$out" "$url" || die "download failed: $url"
+		len=$(asset_len "$url" || true)
+		got=$(stat -c%s "$out")
+		if [ -z "$len" ] || [ "$len" = "$got" ]; then
+			return 0
+		fi
+		echo "fetch: $url changed while downloading (head $len, got $got), retrying" >&2
+	done
+	echo "fetch: $url kept changing, giving up" >&2
+	return 4
+}
+
 # run_as_builder cmd... — makepkg refuses to run as root; CI runs as root
 run_as_builder() {
 	if [ "$(id -u)" = 0 ]; then

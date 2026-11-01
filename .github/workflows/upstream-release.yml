@@ -92,6 +92,8 @@ jobs:
           rc_total=0
           # retry_step <attempts> <extra-ok-rc|-> <cmd...>: a transient
           # download/push hiccup must not red the whole release run.
+          # Returns the final rc (0 on success, <extra-ok-rc> if hit);
+          # rc 4 (upstream assets not ready) is terminal, never retried.
           retry_step() {
             n=$1; ok=$2; shift 2
             a=1
@@ -101,8 +103,9 @@ jobs:
               rc=$?
               set -e
               if [ "$rc" -eq 0 ] || { [ "$ok" != - ] && [ "$rc" -eq "$ok" ]; }; then
-                return 0
+                return "$rc"
               fi
+              if [ "$rc" -eq 4 ]; then return 4; fi
               if [ "$a" -ge "$n" ]; then return "$rc"; fi
               echo "::warning::attempt $a/$n failed (rc=$rc): $*"
               a=$((a + 1))
@@ -112,12 +115,32 @@ jobs:
           for p in $PKGS; do
             echo "=== $p (tag: ${TAG:-resync})"
             if [ -n "$TAG" ]; then
-              # exit 3 = already at that version, not a failure
-              if ! retry_step 3 3 tools/bump.sh "$p" "$TAG"; then
-                echo "::error::$p bump failed"
-                rc_total=1
-                continue
-              fi
+              # bump rc: 0 = bumped, 3 = already at that version,
+              # 4 = upstream assets never became ready
+              brc=0
+              retry_step 3 3 tools/bump.sh "$p" "$TAG" || brc=$?
+              case $brc in
+                0) ;;
+                3)
+                  if [ "$DISPATCH" = 1 ]; then
+                    # The email worker re-fires dispatches for one tag.
+                    # A re-run for an already-shipped tag must not rebuild:
+                    # upstream may be deleting/replacing assets right now.
+                    echo "skip: $p already at $TAG, repository_dispatch re-run"
+                    continue
+                  fi
+                  ;;
+                4)
+                  echo "::error::$p: upstream assets for $TAG never became ready"
+                  rc_total=1
+                  continue
+                  ;;
+                *)
+                  echo "::error::$p bump failed"
+                  rc_total=1
+                  continue
+                  ;;
+              esac
             fi
             if ! retry_step 2 - tools/build.sh "$p"; then
               echo "::error::$p build failed"
@@ -137,6 +160,7 @@ jobs:
         env:
           TAG: ${{ steps.resolve.outputs.tag }}
           PKGS: ${{ steps.resolve.outputs.pkgs }}
+          DISPATCH: ${{ github.event_name == 'repository_dispatch' && '1' || '0' }}
 
       - name: Summary
         if: always()
