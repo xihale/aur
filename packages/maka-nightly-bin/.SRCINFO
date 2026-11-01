@@ -1,0 +1,26 @@
+pkgbase = maka-nightly-bin
+	pkgdesc = Apache Maka (incubating) - local-first agent workspace that keeps a complete record of everything it did; nightly desktop snapshot
+	pkgver = 0.2.2.dev101.20261026
+	pkgrel = 1
+	url = https://github.com/apache/maka
+	arch = x86_64
+	license = Apache-2.0
+	depends = alsa-lib
+	depends = at-spi2-core
+	depends = gtk3
+	depends = libnotify
+	depends = libsecret
+	depends = libxss
+	depends = libxtst
+	depends = nss
+	depends = ripgrep
+	depends = util-linux-libs
+	depends = xdg-utils
+	optdepends = libappindicator-gtk3: tray icon support
+	provides = maka
+	options = !strip
+	options = !debug
+	source = Maka-0.2.2-dev.101.20261026-linux-amd64.deb::https://github.com/apache/maka/releases/download/v0.2.2-dev.101.20261026/Maka-0.2.2-dev.101.20261026-linux-amd64.deb
+	sha256sums = 4095534e10565e60c00abfa01499224530c7e5c5cc84b182fd71a195e90f9eb2
+
+pkgname = maka-nightly-bin

@@ -1,0 +1,61 @@
+# Maintainer: xihale <xihale13@qq.com>
+
+pkgname=maka-git
+pkgver=0.2.2.r5172.g8dd205bab4
+pkgrel=1
+pkgdesc="Apache Maka (incubating) - local-first agent workspace that keeps a complete record of everything it did (git build)"
+arch=('x86_64')
+url="https://github.com/apache/maka"
+license=('Apache-2.0')
+depends=('alsa-lib' 'at-spi2-core' 'gtk3' 'libnotify' 'libsecret' 'libxss'
+         'libxtst' 'nss' 'ripgrep' 'util-linux-libs' 'xdg-utils')
+optdepends=('libappindicator-gtk3: tray icon support')
+makedepends=('git' 'nodejs' 'npm' 'node-gyp' 'python' 'rust')
+options=('!strip' '!debug')
+source=("git+${url}.git"
+        "maka-git.desktop")
+sha256sums=('SKIP'
+            '12c1406b5ce2ca334df906a710b3d1d7d826d703da8f311fe5f91531f5b0b79f')
+
+pkgver() {
+	cd maka
+	printf "%s.r%s.g%s" \
+		"$(node -p "require('./package.json').version")" \
+		"$(git rev-list --count HEAD)" \
+		"$(git rev-parse --short HEAD)"
+}
+
+build() {
+	cd maka
+	# postinstall applies dependency patches and downloads the Electron binary;
+	# native-module build scripts are pre-approved via the committed allowScripts.
+	npm ci --no-audit --no-fund
+	# the Runtime Host peer addon is pulled in via electron-builder extraResources
+	# and must exist before packaging; rust-toolchain.toml selects rustup 'stable'.
+	npm run build:runtime-host-peer
+	npm run build
+	(
+		cd apps/desktop
+		npx electron-builder --config electron-builder.config.mjs --linux dir --x64 --publish never
+	)
+}
+
+package() {
+	local _out="${srcdir}/maka/apps/desktop/release/linux-unpacked"
+
+	install -dm755 "${pkgdir}/opt/${pkgname}"
+	cp -a "${_out}/." "${pkgdir}/opt/${pkgname}/"
+
+	install -Dm644 "${srcdir}/maka-git.desktop" -t "${pkgdir}/usr/share/applications/"
+	install -Dm644 "${srcdir}/maka/apps/desktop/assets/app-icons/sky.png" \
+		"${pkgdir}/usr/share/pixmaps/${pkgname}.png"
+	install -Dm644 "${srcdir}/maka/LICENSE" \
+		"${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+
+	install -dm755 "${pkgdir}/usr/bin"
+	ln -sf "/opt/${pkgname}/maka" "${pkgdir}/usr/bin/${pkgname}"
+
+	find "${pkgdir}/opt/${pkgname}" -type d -exec chmod 755 {} +
+	chmod 755 "${pkgdir}/opt/${pkgname}/maka"
+	chmod 4755 "${pkgdir}/opt/${pkgname}/chrome-sandbox"
+}

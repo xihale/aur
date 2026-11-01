@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Maka (git)
+Exec=/opt/maka-git/maka %U
+Terminal=false
+Type=Application
+Icon=maka-git
+StartupWMClass=maka
+Comment=A local-first agent workspace built for real work (development build)
+Categories=Development;

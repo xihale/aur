@@ -1,0 +1,27 @@
+# Maintainer: xihale <xihale13@qq.com>
+
+pkgname=maka-nightly-bin
+pkgver=0.2.2.dev101.20261026
+pkgrel=1
+pkgdesc="Apache Maka (incubating) - local-first agent workspace that keeps a complete record of everything it did; nightly desktop snapshot"
+arch=('x86_64')
+url="https://github.com/apache/maka"
+license=('Apache-2.0')
+depends=('alsa-lib' 'at-spi2-core' 'gtk3' 'libnotify' 'libsecret' 'libxss'
+         'libxtst' 'nss' 'ripgrep' 'util-linux-libs' 'xdg-utils')
+optdepends=('libappindicator-gtk3: tray icon support')
+provides=('maka')
+options=('!strip' '!debug')
+# upstream tag v0.2.2-dev.101.20261026; dots keep vercmp monotonic across nightlies
+_tag=${pkgver/.dev/-dev.}
+source=("Maka-${_tag}-linux-amd64.deb::https://github.com/apache/maka/releases/download/v${_tag}/Maka-${_tag}-linux-amd64.deb")
+sha256sums=('4095534e10565e60c00abfa01499224530c7e5c5cc84b182fd71a195e90f9eb2')
+
+package() {
+	bsdtar -xOf "${srcdir}/Maka-${_tag}-linux-amd64.deb" data.tar.xz \
+		| bsdtar -xpf - -C "${pkgdir}"
+
+	# Electron's SUID sandbox helper: upstream ships it non-SUID (kernel user
+	# namespaces); 4755 covers userns-less kernels, matching weflow-git here.
+	chmod 4755 "${pkgdir}/opt/Maka/chrome-sandbox"
+}
