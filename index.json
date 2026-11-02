@@ -49,6 +49,14 @@
       ]
     }
   ],
+  "finchtoys/finch-releases": [
+    {
+      "pkg": "finch-agent-bin",
+      "tag_to_pkgver": [
+        "s/^v//"
+      ]
+    }
+  ],
   "router-for-me/CLIProxyAPI": [
     {
       "pkg": "cli-proxy-api-bin",

@@ -1,0 +1,11 @@
+{
+  "aur": true,
+  "watch": {
+    "github": "finchtoys/finch-releases",
+    "tag_to_pkgver": [
+      "s/^v//"
+    ]
+  },
+  "notes": "upstream GitHub (finchtoys/finch-releases), release-email auto-bump; manual: tools/bump.sh finch-agent-bin vX.Y.Z",
+  "build_test": true
+}
