@@ -49,6 +49,14 @@
       ]
     }
   ],
+  "Verlintas/NOIR": [
+    {
+      "pkg": "noir-audit-bin",
+      "tag_to_pkgver": [
+        "s/^v//"
+      ]
+    }
+  ],
   "finchtoys/finch-releases": [
     {
       "pkg": "finch-agent-bin",
