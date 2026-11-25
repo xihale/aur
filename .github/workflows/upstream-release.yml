@@ -23,7 +23,10 @@ permissions:
   contents: write
 
 concurrency:
-  group: upstream-release
+  # repository_dispatch runs process every package watching one upstream repo
+  # and must serialize; manual workflow_dispatch runs target a single package
+  # each, so scope those by package to let them run (and queue) in parallel.
+  group: upstream-release-${{ github.event_name == 'workflow_dispatch' && inputs.package || 'all' }}
   cancel-in-progress: false
 
 env:
