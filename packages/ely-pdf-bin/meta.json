@@ -1,11 +1,6 @@
 {
-  "aur": true,
-  "watch": {
-    "github": "ELY-Open-Source/ElyOffice",
-    "tag_to_pkgver": [
-      "s/^v//"
-    ]
-  },
-  "notes": "upstream GitHub (ELY-Open-Source/ElyOffice), release-email auto-bump; manual: tools/bump.sh ely-pdf-bin vX.Y.Z",
-  "build_test": true
+  "aur": false,
+  "watch": null,
+  "notes": "deprecated: upstream merged all apps into standalone ely-office package (v0.1.16+), superseded by ely-office-bin",
+  "build_test": false
 }

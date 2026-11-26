@@ -7,43 +7,7 @@
   ],
   "ELY-Open-Source/ElyOffice": [
     {
-      "pkg": "ely-doc-bin",
-      "tag_to_pkgver": [
-        "s/^v//"
-      ]
-    },
-    {
-      "pkg": "ely-mark-bin",
-      "tag_to_pkgver": [
-        "s/^v//"
-      ]
-    },
-    {
       "pkg": "ely-office-bin",
-      "tag_to_pkgver": [
-        "s/^v//"
-      ]
-    },
-    {
-      "pkg": "ely-pdf-bin",
-      "tag_to_pkgver": [
-        "s/^v//"
-      ]
-    },
-    {
-      "pkg": "ely-show-bin",
-      "tag_to_pkgver": [
-        "s/^v//"
-      ]
-    },
-    {
-      "pkg": "ely-table-bin",
-      "tag_to_pkgver": [
-        "s/^v//"
-      ]
-    },
-    {
-      "pkg": "ely-tree-bin",
       "tag_to_pkgver": [
         "s/^v//"
       ]

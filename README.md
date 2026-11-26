@@ -104,11 +104,9 @@ Watch the repo in GitHub (Releases only) and you're done.
 ## Package status (2026-10-20)
 
 Watched (automatic): strix-bin, noir-audit-bin (Verlintas/NOIR), cli-proxy-api-bin, snirect, snirect-bin,
-v2rayn-bin, cloudpan189-go-mauruppi-bin, ncmdump-latest-bin, ely-doc-bin,
-ely-mark-bin, ely-pdf-bin, ely-show-bin, ely-table-bin, ely-tree-bin and
-the `ely-office-bin` metapackage pulling all six (ELY-Open-Source/ElyOffice,
-ships ready Arch packages under `/opt/ely-office/<app>`, repackaged
-verbatim) + WIP: codexmanager (CodexManager/), clirelay-bin,
+v2rayn-bin, cloudpan189-go-mauruppi-bin, ncmdump-latest-bin, ely-office-bin
+(ELY-Open-Source/ElyOffice, standalone Arch package under `/opt/ely-office`,
+repackaged verbatim) + WIP: codexmanager (CodexManager/), clirelay-bin,
 con-terminal-bin, gdut_course_grabber. ELYTerminal is already packaged on
 AUR as `elyterminal-bin`, so it is not mirrored here.
 
